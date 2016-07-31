@@ -3,3 +3,4 @@
 .s3cmd*
 *.mp4
 *.mov
+.DS_Store
