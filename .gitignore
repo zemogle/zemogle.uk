@@ -1,0 +1,5 @@
+*.fits
+20*.png
+.s3cmd*
+*.mp4
+*.mov
