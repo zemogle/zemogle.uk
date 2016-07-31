@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <!-- Basic Page Needs
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <meta charset="utf-8">
+  <title>Breacon All Sky camera</title>
+  <meta name="description" content="">
+  <meta name="author" content="Edward Gomez">
+
+  <!-- Mobile Specific Metas
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- FONT
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+
+  <!-- CSS
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link rel="stylesheet" href="../css/normalize.css">
+  <link rel="stylesheet" href="../css/skeleton.css">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+  <!-- Favicon
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link rel="icon" type="image/png" href="images/favicon.png">
+
+	<!--[if lt IE 9]><script src="excanvas.min.js"></script><![endif]-->
+	<script src="jquery-1.7.1.min.js"></script>
+	<script src="VirtualSky/virtualsky.js" type="text/javascript"></script>
+
+<script>
+
+		// Inputs:
+		//   id = ID of element to attach this to
+		//   lat = Latitude of webcam
+		//   lon = Longitude of webcam
+		//   src = (optional) Source for the webcam image. Or just include the <img> in the element.
+		//   w = (optional) width of webcam image
+		//   h = (optional) height of webcam image
+		//   x = (optional) The x-offset of the overlay
+		//   y = (optional) The y-offset of the overlay
+		//   az = (optional) The azimth offset for the webcam
+		//   projection = (optional) projection
+		//   scale = (optional) the relative size of the VirtualSky and the webcam image
+		//   clock = (optional) The time of the webcam image
+		function LabelWebcam(inp){
+			if(!inp) return this;
+			if(!inp.id || typeof inp.id!=="string") return this;
+			this.id = inp.id;
+			this.el = $('#'+this.id);
+			if(this.el.length == 0) return this;
+			var img = this.el.find('img');
+
+			if(!inp.lat || typeof inp.lat!=="number") return this;
+			if(!inp.lon || typeof inp.lon!=="number") return this;
+			if(inp.src && typeof inp.src!=="string") return this;
+			if(!inp.src && this.el.find('img').length == 0) return this;
+			if(inp.w && typeof inp.w!=="number") return this;
+			if(inp.h && typeof inp.h!=="number") return this;
+			if(inp.x && typeof inp.x!=="number") return this;
+			if(inp.y && typeof inp.y!=="number") return this;
+			if(inp.scale && typeof inp.scale!=="number") return this;
+			if(inp.projection && typeof inp.projection!=="string") return this;
+			if(inp.clock) this.clock = inp.clock;
+			this.src = inp.src;
+			this.lat = inp.lat;
+			this.lon = inp.lon;
+			this.w = (inp.w) ? inp.w : (img.length == 0 ? 640 : img.width());
+			this.h = (inp.h) ? inp.h : (img.length == 0 ? 480 : img.height());
+			this.x = (inp.x) ? inp.x : 0;
+			this.y = (inp.y) ? inp.y : 0;
+			this.scale = (inp.scale) ? inp.scale : 1;
+			this.az = (inp.az) ? inp.az : 180;
+			this.projection = (inp.projection) ? inp.projection : "polar";
+			this.live = (typeof inp.live!=="boolean") ? true : inp.live;
+
+			this.el.css({
+				'display':'inline-block',
+				'width': this.w+'px',
+				'height': this.h+'px',
+				'position': 'relative',
+				'overflow': 'hidden'
+			});
+			img.css({ 'position':'absolute','z-index':2});
+
+			var vs = '<div id="'+this.id+'_virtualsky" style="position:absolute;left: '+this.x+'px;top:'+this.y+'px;width:'+Math.round(this.scale*this.w)+'px;height:'+Math.round(this.scale*this.w)+'px;z-index:1;"><\/div>'
+			if(this.el.find('img').length == 0){
+				this.el.html('<img src="'+this.src+'" style="position:absolute;z-index:2;" />'+vs);
+			}else{
+				this.el.append(vs);
+			}
+
+			this.sky = $.virtualsky({
+				id:this.id+'_virtualsky',
+				credit:true,
+				projection:this.projection,
+				az:this.az,
+				showstarlabels:false,
+				transparent:true,
+				showstars:false,
+				constellations:true,
+				constellationlabels: true,
+				gridlines_az:true,
+				showplanets:false,
+				latitude:this.lat,
+				longitude:this.lon,
+				gridstep:30,
+				mouse:false,
+        showplanets:true,
+				keyboard:true});
+			if(this.clock) this.sky.setClock(new Date(this.clock));
+			if(this.live) this.sky.start();
+
+			$('#'+this.id).on('mouseover',{me:this},function(e){
+				$(this).find('img').css('z-index',0);
+			}).on('mouseout',function(e){
+				$(this).find('img').css('z-index',2);
+			});
+			return this;
+		}
+
+		$(document).ready(function(){
+
+      $.getJSON( "latest.json", function(data) {
+  			var brecon = new LabelWebcam({
+  					id:'brecon-allsky',
+  					scale:670/960,
+  					projection:'fisheye',
+  					x:165,
+  					y:25,
+  					az:128, /* Rotation of the frame */
+  					lat:51.924854,
+  					lon:-3.488342,
+  					live:false,
+            clock:data['time']
+  				 });
+       });
+
+
+		});
+
+	</script>
+</head>
+<body>
+
+  <!-- Primary Page Layout
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <div class="container">
+    <div class="row">
+      <div class="twelve column">
+        <h4>Brecon Beacons Dark Sky Reserve All Sky Camera</h4>
+        <div id="brecon-allsky">
+        <img src="latest.jpg" class="tofit" alt="Latest all sky image from Brecon Beacons"/>
+        </div>
+        <p><a href="latest.mp4" class="button button-primary">Watch 24 hour timelapse video</a> from the skies above Brecon Beacons.</p>
+        <p>This is a Starlight Xpress Oculus camera I installed at the <a href="http://www.breconbeacons.org/national-park-visitor-centre">Brecon Beacons National Park Visitor Centre</a> for their use in promoting <a href="http://www.breconbeacons.org/stargazing">dark skies and their Dark Sky Reserve</a> status.</p>
+        <p>For more information about the installation and why I wanted to do it, please have a look at <a href="http://darkmattersheep.uk/blog/brecon-allsky/">my blog post on Dark Matter Sheep</a>. You can find more information <a href="http://edward.gomez.me.uk">about me ,Edward Gomez, on my profile website</a>.</p>
+        <p>Funding to purchase the camera was provided by the <a href="http://www.cardiff.ac.uk/communityengagement/index.html">Cardiff University Public Engagement</a> small grants scheme.</p>
+        <p><i class="fa fa-github"></i>All of the camera software is written in Python and stored on Git Hub, so <a href="https://github.com/zemogle/pyOculus">Fork Me!</a>.</p>
+	<p>&copy; 2016 Dark Matter Sheep</p>
+      </div>
+    </div>
+
+<!-- End Document
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-1315386-16', 'auto');
+  ga('send', 'pageview');
+
+</script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<html>
+<head>
+	<title>Virtual Sky - Canvas Experiment</title>
+	<!--
+		Virtual Sky <canvas> application
+		(c) 2010 Stuart Lowe (Las Cumbras Observatory Global Telescope)
+	-->
+	<style>
+	body {
+		background: #ddd;
+		font-family: Helvetica, sans-serif;
+		color: black;
+	}
+	h1 { font-size: 1.2em; }
+	p { margin-top: 0.5em; margin-bottom: 3em; }
+	li span { cursor: pointer; }
+	</style>
+	<!--[if lt IE 9]><script src="excanvas.min.js"></script><![endif]-->
+	<script src="jquery-1.7.1.min.js"></script>
+	<script src="VirtualSky/virtualsky.js" type="text/javascript"></script>
+
+	<script>
+
+		// Inputs:
+		//   id = ID of element to attach this to
+		//   lat = Latitude of webcam
+		//   lon = Longitude of webcam
+		//   src = (optional) Source for the webcam image. Or just include the <img> in the element.
+		//   w = (optional) width of webcam image
+		//   h = (optional) height of webcam image
+		//   x = (optional) The x-offset of the overlay
+		//   y = (optional) The y-offset of the overlay
+		//   az = (optional) The azimth offset for the webcam
+		//   projection = (optional) projection
+		//   scale = (optional) the relative size of the VirtualSky and the webcam image
+		//   clock = (optional) The time of the webcam image
+		function LabelWebcam(inp){
+			if(!inp) return this;
+			if(!inp.id || typeof inp.id!=="string") return this;
+			this.id = inp.id;
+			this.el = $('#'+this.id);
+			if(this.el.length == 0) return this;
+			var img = this.el.find('img');
+
+			if(!inp.lat || typeof inp.lat!=="number") return this;
+			if(!inp.lon || typeof inp.lon!=="number") return this;
+			if(inp.src && typeof inp.src!=="string") return this;
+			if(!inp.src && this.el.find('img').length == 0) return this;
+			if(inp.w && typeof inp.w!=="number") return this;
+			if(inp.h && typeof inp.h!=="number") return this;
+			if(inp.x && typeof inp.x!=="number") return this;
+			if(inp.y && typeof inp.y!=="number") return this;
+			if(inp.scale && typeof inp.scale!=="number") return this;
+			if(inp.projection && typeof inp.projection!=="string") return this;
+			if(inp.clock) this.clock = inp.clock;
+			this.src = inp.src;
+			this.lat = inp.lat;
+			this.lon = inp.lon;
+			this.w = (inp.w) ? inp.w : (img.length == 0 ? 640 : img.width());
+			this.h = (inp.h) ? inp.h : (img.length == 0 ? 480 : img.height());
+			this.x = (inp.x) ? inp.x : 0;
+			this.y = (inp.y) ? inp.y : 0;
+			this.scale = (inp.scale) ? inp.scale : 1;
+			this.az = (inp.az) ? inp.az : 180;
+			this.projection = (inp.projection) ? inp.projection : "polar";
+			this.live = (typeof inp.live!=="boolean") ? true : inp.live;
+
+			this.el.css({
+				'display':'inline-block',
+				'width': this.w+'px',
+				'height': this.h+'px',
+				'position': 'relative',
+				'overflow': 'hidden'
+			});
+			img.css({ 'position':'absolute','z-index':2});
+			
+			var vs = '<div id="'+this.id+'_virtualsky" style="position:absolute;left: '+this.x+'px;top:'+this.y+'px;width:'+Math.round(this.scale*this.w)+'px;height:'+Math.round(this.scale*this.w)+'px;z-index:1;"><\/div>'
+			if(this.el.find('img').length == 0){
+				this.el.html('<img src="'+this.src+'" style="position:absolute;z-index:2;" />'+vs);
+			}else{
+				this.el.append(vs);
+			}
+
+			this.sky = $.virtualsky({id:this.id+'_virtualsky',credit:false,projection:this.projection,az:this.az,showstarlabels:true,transparent:true,showstars:false,constellations:true,gridlines_az:true,showplanets:false,latitude:this.lat,longitude:this.lon,gridstep:30,mouse:false,keyboard:true});
+			if(this.clock) this.sky.setClock(new Date(this.clock));
+			if(this.live) this.sky.start();
+			
+			$('#'+this.id).on('mouseover',{me:this},function(e){
+				$(this).find('img').css('z-index',0);
+			}).on('mouseout',function(e){
+				$(this).find('img').css('z-index',2);			
+			});
+			return this;
+		}
+
+		$(document).ready(function(){
+
+			var metar = new LabelWebcam({id:'webcam-metar',scale:660/640,projection:'fisheye',x:17,y:-110,az:13.,lon:10.344399,lat:59.689427,clock:'Tue May 01 2012 22:44:00 GMT+0000 (GMT)',live:false});
+			var bayford = new LabelWebcam({id:'webcam-bayford',scale:608/640,x:28,y:-76,az:196.,lon:-0.095,lat:51.776389,clock:'Mon Apr 30 2012 00:58:43 GMT+0000 (GMT)',live:false});
+			var ogg = new LabelWebcam({id:'webcam-ogg',scale:606/640,x:22,y:-71,az:178.2,lat:20.7075,lon:-156.2558,clock:'Fri Jun 01 2012 13:52:40 GMT+0000 (GMT)',live:false});
+			var ogg2 = new LabelWebcam({id:'webcam-ogg-2',scale:606/640,x:11,y:-36,az:178.2,lat:20.7075,lon:-156.2558,clock:'Fri Jun 01 2012 13:52:40 GMT+0000 (GMT)',live:false});
+			var ogg3 = new LabelWebcam({id:'webcam-ogg-3',scale:604/640,x:28,y:-71,az:180.5,lat:20.7075,lon:-156.2558,clock:'Mon Feb 25 2013 12:17:40 GMT+0000 (GMT)',live:false});
+			var elp = new LabelWebcam({id:'webcam-elp',scale:606/640,x:48,y:-66,az:280.5,lat:30.67,lon:-104.02,clock:'Sat Feb 23 2013 11:23:32 GMT+0000 (GMT)',live:false});
+			var elp2 = new LabelWebcam({id:'webcam-elp-2',scale:606/640,x:48,y:-66,az:280.5,lat:30.67,lon:-104.02,clock:'Sat Feb 23 2013 12:03:07 GMT+0000 (GMT)',live:false});
+		});
+
+	</script>
+</head>
+
+<body>
+<h1>VirtualSky Webcam Test</h1>
+	
+	<p>Adding <a href="http://lcogt.net/virtualsky">VirtualSky</a> overlays to all-sky webcams. Mouseover a webcam image to see the overlay. Different all-sky cameras have different projections. SBIGs seem to be polar whereas others may have a fish-eye projection. VirtualSky has  <a href="http://lcogt.net/virtualsky#keys">keyboard shortcuts</a> to turn some things on and off.</p>
+
+	<div id="webcam-ogg"><img src="lastsnap.jpg" alt="OGG all-sky webcam" /></div>
+	<div id="webcam-ogg-2"><img src="lastsnap.jpg" style="width:320px;height:240px;" alt="OGG all-sky webcam" /></div>
+	<div id="webcam-ogg-3"><img src="sbigbw.jpg" alt="OGG all-sky webcam" /></div>
+	<p><a href="http://lcogt.net/camera/ogg.html">All-sky image from OGG</a> (copyright LCOGT). This SBIG camera seems to use a polar projection (<code>projection=polar</code>).</p>
+	
+	
+
+	<div id="webcam-elp"><img src="kc11.jpg" alt="ELP all-sky webcam" /></div>
+	<div id="webcam-elp-2"><img src="kc11_b.jpg" alt="ELP all-sky webcam" /></div>
+	<p><a href="http://lcogt.net/camera/elp.html">All-sky image from ELP</a> (copyright LCOGT). This SBIG camera seems to use a polar projection (<code>projection=polar</code>).</p>
+	
+
+	<div id="webcam-bayford"><img src="AllSkyCam2.jpg" alt="Bayfordbury all-sky" /></div>
+	<p><a href="http://star.herts.ac.uk/allsky/about.php?c=1">All-sky test image from Bayfordbury</a> (copyright Bayfordbury). This SBIG camera seems to use a polar projection (<code>projection=polar</code>).</p>
+
+
+	<div id="webcam-metar"><img src="AllSkyCam.jpg" alt="metar.no all-sky" /></div>
+	<p><a href="http://www.metar.no/webcamstest.html">All-sky test image from metar.no</a> (copyright metar.no). This all-sky camera seems to be a little non-linear in radial distance. Combined with a non-central zenith this leads to non-alignment in both azimuth and elevation. (<code>projection=fisheye</code>)</p>
+
+
+</body>
+</html>
